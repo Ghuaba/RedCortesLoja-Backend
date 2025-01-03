@@ -22,9 +22,6 @@ RedCortesLoja tiene como objetivo mejorar la gestión y comunicación de cortes 
 
 Los usuarios pueden registrar su ubicación, crear alertas y validar cortes mediante una red descentralizada. Los supervisores oficiales pueden emitir alertas sin necesidad de validación.
 
-## Contribuciones
-
-Las contribuciones son bienvenidas. Abre un "issue" para sugerencias o mejoras.
 
 ## Autores / Contribuidores
 
