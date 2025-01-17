@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from pymongo import MongoClient, errors
 import os
 from dotenv import load_dotenv
+from routes.route_usuario import usuario_bp
 
 def create_app():
     load_dotenv(dotenv_path='config/.env')
@@ -19,5 +20,7 @@ def create_app():
     @app.route('/')
     def index():
         return jsonify(connection_status)
+    
+    app.register_blueprint(usuario_bp, url_prefix='/usuario')
 
     return app
