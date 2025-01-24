@@ -1,14 +1,18 @@
 from flask import Flask, jsonify
 from pymongo import MongoClient, errors
-import os
-from dotenv import load_dotenv
+from config import MONGODB_URI
 from routes.route_usuario import usuario_bp
+from routes.route_login import login_bp
+from routes.route_validartoken import api_validarToken
+from flask_cors import CORS
+import os
 
 def create_app():
-    load_dotenv(dotenv_path='config/.env')
-    MONGODB_URI = os.getenv('MONGODB_URI')
-    
     app = Flask(__name__)
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+
+    CORS(app)  # Enable CORS for all routes
 
     try:
         client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000, tls=True)
@@ -22,5 +26,7 @@ def create_app():
         return jsonify(connection_status)
     
     app.register_blueprint(usuario_bp, url_prefix='/usuario')
+    app.register_blueprint(login_bp, url_prefix='/home')
+    app.register_blueprint(api_validarToken, url_prefix='/validaciones')
 
     return app

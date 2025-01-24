@@ -1,5 +1,16 @@
 from models.model_usuario import Usuario
 import re
+import uuid
+from pymongo import MongoClient
+from config import MONGODB_URI, MONGODB_DB
+import logging
+from bcrypt import hashpw, gensalt
+
+client = MongoClient(MONGODB_URI)
+db = client[str(MONGODB_DB)]
+usuarios_collection = db['usuarios']
+
+logging.basicConfig(level=logging.ERROR)  # Set logging level to ERROR
 
 def validar_datos_usuario(nombre, apellido, correo, contraseña, ubicacion):
     if not re.match(r'^[a-zA-Z]{2,}$', nombre):
@@ -15,10 +26,32 @@ def validar_datos_usuario(nombre, apellido, correo, contraseña, ubicacion):
     return True, ""
 
 def crear_usuario(nombre, apellido, correo, contraseña, ubicacion):
-    valido, mensaje = validar_datos_usuario(nombre, apellido, correo, contraseña, ubicacion)
-    if not valido:
-        return {"message": mensaje}
-    
-    nuevo_usuario = Usuario(nombre, apellido, correo, contraseña, ubicacion)
-    usuario_id = nuevo_usuario.save()
-    return {"message": "Usuario creado exitosamente", "id": usuario_id}
+    try:
+        valido, mensaje = validar_datos_usuario(nombre, apellido, correo, contraseña, ubicacion)
+        if not valido:
+            return {"message": mensaje}
+        
+        if usuarios_collection.find_one({"correo": correo}):
+            return {"message": "Correo ya registrado"}
+        
+        hashed_password = hashpw(contraseña.encode('utf-8'), gensalt())
+        
+        external_id = str(uuid.uuid4())
+        estado = "activo"
+        
+        nuevo_usuario = {
+            "nombre": nombre,
+            "apellido": apellido,
+            "correo": correo,
+            "contraseña": hashed_password.decode('utf-8'),
+            "ubicacion": ubicacion,
+            "external_id": external_id,
+            "estado": estado
+        }
+        
+        result = usuarios_collection.insert_one(nuevo_usuario)
+        print(f"Usuario creado exitosamente: {nuevo_usuario['correo']}")
+        return {"message": "Usuario creado exitosamente", "id": str(result.inserted_id)}
+    except Exception as e:
+        logging.error(f"Error al crear usuario: {e}")
+        return {"message": "Error interno del servidor"}, 500
