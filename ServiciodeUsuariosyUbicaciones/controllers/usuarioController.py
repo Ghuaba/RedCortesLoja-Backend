@@ -55,3 +55,11 @@ def crear_usuario(nombre, apellido, correo, contraseña, ubicacion):
     except Exception as e:
         logging.error(f"Error al crear usuario: {e}")
         return {"message": "Error interno del servidor"}, 500
+    
+def obtener_usuarios():
+    usuarios = list(usuarios_collection.find({}, {"_id": 0, "nombre": 1, "apellido": 1, "correo": 1, "ubicacion": 1}))
+    return usuarios
+
+def obtener_usuario_por_external_id(external_id):
+    usuario = usuarios_collection.find_one({"external_id": external_id}, {"_id": 0, "nombre": 1, "apellido": 1, "correo": 1, "ubicacion": 1})
+    return usuario

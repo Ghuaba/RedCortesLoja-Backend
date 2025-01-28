@@ -25,7 +25,7 @@ def token_required(f):
             )
         try:
             secret_key = current_app.config['JWT_SECRET_KEY']
-            data = jwt.decode(token, key=secret_key, algorithms=["HS512"])
+            data = jwt.decode(token, key=secret_key, algorithms=["HS256"])
             user = usuarios_collection.find_one({"external_id": data['external']})
             if not user:
                 return make_response(
@@ -38,6 +38,7 @@ def token_required(f):
                 401
             )
         except jwt.InvalidTokenError as e:
+            print(f"Invalid token: {e}")  # Agrega este print para mostrar el error real
             return make_response(
                 jsonify({"msg": f"Invalid token: {e}", "code": 401}),
                 401

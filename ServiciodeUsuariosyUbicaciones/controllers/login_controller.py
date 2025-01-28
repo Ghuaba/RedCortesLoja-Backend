@@ -28,7 +28,7 @@ class LoginControl:
                     "expiracion": (datetime.now(timezone.utc) + timedelta(minutes=60)).isoformat()
                 },
                 current_app.config["JWT_SECRET_KEY"],
-                algorithm="HS512"
+                algorithm="HS256"
             )
             info = {
                 "token": token,
@@ -38,4 +38,5 @@ class LoginControl:
             return jsonify({"code": 200, "datos": info, "msg": "SUCCESS"}), 200
         except Exception as e:
             logging.error(f"Error al iniciar sesión: {e}")
+            print(f"Error al iniciar sesión: {e}")  # Agrega este print para mostrar el error real
             return jsonify({"code": 500, "datos": {"error": "Error interno del servidor"}, "msg": "ERROR"}), 500

@@ -4,6 +4,7 @@ from config import MONGODB_URI
 from routes.route_usuario import usuario_bp
 from routes.route_login import login_bp
 from routes.route_validartoken import api_validarToken
+from routes.route_ubicaciones import api_ubicaciones
 from flask_cors import CORS
 import os
 
@@ -28,5 +29,6 @@ def create_app():
     app.register_blueprint(usuario_bp, url_prefix='/usuario')
     app.register_blueprint(login_bp, url_prefix='/home')
     app.register_blueprint(api_validarToken, url_prefix='/validaciones')
+    app.register_blueprint(api_ubicaciones, url_prefix='/ubicacion')
 
     return app
