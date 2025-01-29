@@ -57,9 +57,56 @@ def crear_usuario(nombre, apellido, correo, contraseña, ubicacion):
         return {"message": "Error interno del servidor"}, 500
     
 def obtener_usuarios():
-    usuarios = list(usuarios_collection.find({}, {"_id": 0, "nombre": 1, "apellido": 1, "correo": 1, "ubicacion": 1}))
-    return usuarios
+    try:
+        usuarios = list(usuarios_collection.find({}, {"_id": 0, "nombre": 1, "apellido": 1, "correo": 1, "estado": 1, "external_id": 1}))
+        return {"code": 200, "datos": usuarios}
+    except Exception as e:
+        logging.error(f"Error al obtener usuarios: {e}")
+        return {"code": 500, "message": "Error interno del servidor"}
 
 def obtener_usuario_por_external_id(external_id):
     usuario = usuarios_collection.find_one({"external_id": external_id}, {"_id": 0, "nombre": 1, "apellido": 1, "correo": 1, "ubicacion": 1})
     return usuario
+
+def actualizar_usuario(external_id, nombre, apellido, correo, contraseña, ubicacion):
+    try:
+        valido, mensaje = validar_datos_usuario(nombre, apellido, correo, contraseña, ubicacion)
+        if not valido:
+            return {"message": mensaje}
+        
+        usuario = usuarios_collection.find_one({"external_id": external_id})
+        if not usuario:
+            return {"message": "Usuario no encontrado"}
+        
+        hashed_password = hashpw(contraseña.encode('utf-8'), gensalt())
+        
+        usuarios_collection.update_one(
+            {"external_id": external_id},
+            {
+                "$set": {
+                    "nombre": nombre,
+                    "apellido": apellido,
+                    "correo": correo,
+                    "contraseña": hashed_password.decode('utf-8'),
+                    "ubicacion": ubicacion
+                }
+            }
+        )
+        print(f"Usuario actualizado exitosamente: {correo}")
+        return {"message": "Usuario actualizado exitosamente"}
+    except Exception as e:
+        logging.error(f"Error al actualizar usuario: {e}")
+        return {"message": "Error interno del servidor"}, 500
+    
+def eliminar_usuario(external_id):
+    try:
+        usuario = usuarios_collection.find_one({"external_id": external_id})
+        if not usuario:
+            return {"message": "Usuario no encontrado"}
+        
+        usuarios_collection.delete_one({"external_id": external_id})
+        print(f"Usuario eliminado exitosamente: {usuario['correo']}")
+        return {"message": "Usuario eliminado exitosamente"}
+    except Exception as e:
+        logging.error(f"Error al eliminar usuario: {e}")
+        return {"message": "Error interno del servidor"}, 500
