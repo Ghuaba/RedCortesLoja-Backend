@@ -27,3 +27,32 @@ class NotificacionController:
 
         except Exception as e:
             return {"error": str(e)}
+
+
+    @staticmethod
+    def obtener_notificaciones(usuario_id):
+        """
+        Obtiene todas las notificaciones enviadas a un usuario específico.
+
+        Args:
+            usuario_id (str): ID del usuario para el que se desean obtener las notificaciones.
+
+        Returns:
+            list: Lista de notificaciones para el usuario.
+        """
+        try:
+            notificaciones = db["notificaciones"].find({"usuario_id": usuario_id})
+            lista_notificaciones = []
+
+            for notificacion in notificaciones:
+                lista_notificaciones.append({
+                    "external_id": str(notificacion["_id"]),
+                    "mensaje": notificacion["mensaje"],
+                    "tipo": notificacion["tipo"],
+                    "fecha": notificacion["fecha"]
+                })
+
+            return lista_notificaciones
+
+        except Exception as e:
+            return {"error": str(e)}
