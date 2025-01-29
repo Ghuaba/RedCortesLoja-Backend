@@ -1,25 +1,34 @@
 from datetime import datetime
 from config.db import db
-from flask_socketio import emit
+import uuid
+
+class TipoNotificacion:
+    OFICIAL = "oficial"
+    ALERTA = "alerta"
+    GENERAL = "general"
+
 
 class Notificacion:
-    def __init__(self, mensaje, fecha_envio, tipo):
-        self.id = None  
+    def __init__(self, mensaje, tipo, usuario_id, espera_respuesta=False):
         self.mensaje = mensaje
-        self.fecha_envio = fecha_envio
         self.tipo = tipo
+        self.usuario_id = usuario_id
+        self.fecha = datetime.utcnow()
+        self.external_id = str(uuid.uuid4())
+        self.external_id_corte = None  # Relacionamos con el corte
+        self.espera_respuesta = espera_respuesta  # Indicamos si se espera una respuesta
         self.collection = db["notificaciones"]
 
     def save(self):
+        """Guarda la notificación en MongoDB."""
         notificacion_data = {
+            "external_id": self.external_id,
             "mensaje": self.mensaje,
-            "fecha_envio": self.fecha_envio,
-            "tipo": self.tipo
+            "tipo": self.tipo,
+            "usuario_id": self.usuario_id,
+            "fecha": self.fecha,
+            "external_id_corte": self.external_id_corte,
+            "espera_respuesta": self.espera_respuesta  # Añadimos la información sobre si se espera respuesta
         }
         result = self.collection.insert_one(notificacion_data)
-        self.id = result.inserted_id 
-        return result.inserted_id
-
-    def enviar(self, usuarios):
-        for usuario in usuarios:
-            emit("notificacion", {"mensaje": self.mensaje, "fecha": self.fecha_envio}, room=usuario.id)
+        return str(result.inserted_id)
