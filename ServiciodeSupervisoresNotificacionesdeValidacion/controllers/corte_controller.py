@@ -3,6 +3,7 @@ from models.notificacion import Notificacion, TipoNotificacion
 from datetime import datetime
 from config.db import db
 
+
 class CorteController:
     @staticmethod
     def crear_corte(tipo, tipoCorte, sector, estado="pendiente"):
@@ -26,6 +27,7 @@ class CorteController:
         # Retornar el corte serializado con su nuevo ID
         return nuevo_corte.serialize
 
+
     @staticmethod
     def obtener_todos_los_cortes():
         """
@@ -38,16 +40,25 @@ class CorteController:
         lista_cortes = []
 
         for corte in cortes:
+            fecha_reporte = corte.get("fecha_reporte")
+            if isinstance(fecha_reporte, str):  
+                try:
+                    fecha_reporte = datetime.fromisoformat(fecha_reporte)  
+                except ValueError:
+                    fecha_reporte = None  # Si hay un error en el formato, asignar None
+            
             lista_cortes.append({
                 "id": str(corte["_id"]),
                 "tipo": corte.get("tipo"),
+                "tipoCorte": corte.get("tipoCorte"),                
                 "sector": corte.get("sector"),
                 "estado": corte.get("estado"),
-                "fechaReporte": corte.get("fechaReporte").isoformat() if "fechaReporte" in corte else None,
+                "fechaReporte": fecha_reporte.isoformat() if fecha_reporte else None,
                 "usuario_id": str(corte["usuario_id"]) if corte.get("usuario_id") else None
             })
 
         return lista_cortes
+
 
     @staticmethod
     def registrar_respuesta(corte_id, usuario_id, respuesta):
