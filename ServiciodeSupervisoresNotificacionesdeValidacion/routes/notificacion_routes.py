@@ -106,3 +106,28 @@ def enviar_notificacion():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+    
+
+
+@notificacion_routes.route("/usuario/<usuario_id>", methods=["GET"])
+def obtener_notificaciones_usuario(usuario_id):
+    """
+    Ruta para obtener todas las notificaciones de un usuario específico.
+
+    Args:
+        usuario_id (str): ID del usuario para el que se desean obtener las notificaciones.
+
+    Retorna:
+        - Código 200 con la lista de notificaciones si tiene éxito.
+        - Código 404 si no se encuentran notificaciones para el usuario.
+    """
+    try:
+        notificaciones = NotificacionController.obtener_notificaciones(usuario_id)
+
+        if "error" in notificaciones:
+            return jsonify({"error": notificaciones["error"]}), 404
+
+        return jsonify({"notificaciones": notificaciones}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
