@@ -1,28 +1,37 @@
 from flask import Blueprint, request, jsonify
 from pymongo import MongoClient
 from config import MONGODB_URI, MONGODB_DB
+from bson import ObjectId
 
 client = MongoClient(MONGODB_URI)
 db = client[str(MONGODB_DB)]
 ubicaciones_collection = db['ubicaciones']
 
-ubicaciones_bp = Blueprint('ubicaciones', __name__)
+api_ubicaciones = Blueprint('api_ubicaciones', __name__)
 
-@ubicaciones_bp.route('/ubicaciones', methods=['POST'])
-def agregar_ubicacion():
+def agregar_poligono():
     data = request.get_json()
     nombre = data.get('nombre')
-    latitud = data.get('latitud')
-    longitud = data.get('longitud')
+    geojson = data.get('geojson')
 
-    if not nombre or not latitud or not longitud:
+    if not nombre or not geojson:
         return jsonify({"error": "Faltan datos"}), 400
 
-    ubicacion = {
+    poligono = {
+        "_id": str(ObjectId()),
         "nombre": nombre,
-        "latitud": latitud,
-        "longitud": longitud
+        "geojson": geojson
     }
 
-    ubicaciones_collection.insert_one(ubicacion)
-    return jsonify({"message": "Ubicación agregada correctamente"}), 201
+    ubicaciones_collection.insert_one(poligono)
+    return jsonify({"message": "Polígono agregado correctamente", "id": poligono["_id"]}), 201
+
+def obtener_poligonos():
+    poligonos = list(ubicaciones_collection.find({}))
+    return jsonify(poligonos), 200
+
+def eliminar_poligono(id):
+    result = ubicaciones_collection.delete_one({"_id": id})
+    if result.deleted_count == 0:
+        return jsonify({"error": "Polígono no encontrado"}), 404
+    return jsonify({"message": "Polígono eliminado correctamente"}), 200

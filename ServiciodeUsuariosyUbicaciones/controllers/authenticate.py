@@ -1,7 +1,6 @@
 from flask import request, jsonify, make_response, current_app
 from pymongo import MongoClient
 import jwt
-from datetime import datetime, timedelta
 from functools import wraps
 from config import MONGODB_URI, MONGODB_DB
 
@@ -25,7 +24,7 @@ def token_required(f):
             )
         try:
             secret_key = current_app.config['JWT_SECRET_KEY']
-            data = jwt.decode(token, key=secret_key, algorithms=["HS512"])
+            data = jwt.decode(token, key=secret_key, algorithms=["HS256"])
             user = usuarios_collection.find_one({"external_id": data['external']})
             if not user:
                 return make_response(
@@ -38,6 +37,7 @@ def token_required(f):
                 401
             )
         except jwt.InvalidTokenError as e:
+            print(f"Invalid token: {e}")
             return make_response(
                 jsonify({"msg": f"Invalid token: {e}", "code": 401}),
                 401

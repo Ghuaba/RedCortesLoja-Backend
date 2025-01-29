@@ -19,7 +19,5 @@ schema_sesion = {
 @expects_json(schema_sesion)
 def login():
     data = request.get_json()
-    print(f"Login data received: {data}")
     response, status_code = login_control.inicio_sesion(data)
-    print(f"Login response: {response.get_json()}")
     return response, status_code
