@@ -1,60 +1,42 @@
 from datetime import datetime
 from config.db import db
-from models.notificacion import Notificacion
+import uuid
+from bson import ObjectId
 
 class Corte:
-    def __init__(self, tipo, sector, estado, fecha_reporte):
-        self.id = None  
-        self.tipo = tipo
-        self.sector = sector 
-        self.estado = estado
-        self.fecha_reporte = fecha_reporte
-        self.usuarios_validaciones = []
+    def __init__(self, tipo, tipoCorte, sector, estado, fecha_reporte=None, external_id=None):
+        self.tipo = tipo  # Tipo de corte (directo o con validación)
+        self.tipoCorte = tipoCorte  # Agua/Luz
+        self.sector = sector  # ID del sector
+        self.estado = estado  # Estado del corte
+        self.fecha_reporte = fecha_reporte if fecha_reporte else datetime.utcnow()  # Fecha actual por defecto
+        self.external_id = external_id or str(uuid.uuid4())  # Generar un UUID si no se proporciona
         self.collection = db["cortes"]
 
-    def save(self):
-        corte_data = {
-            "tipo": self.tipo,
-            "sector": self.sector.id,  
-            "estado": self.estado,
-            "fecha_reporte": self.fecha_reporte,
-            "usuarios_validaciones": [usuario.id for usuario in self.usuarios_validaciones]  
+    # Método para serializar la instancia
+    @property
+    def serialize(self):
+        return {
+            'external_id': self.external_id,  # Ahora usamos external_id
+            'tipo': self.tipo,
+            'tipoCorte': self.tipoCorte,
+            'sector': self.sector,
+            'estado': self.estado,
+            "fecha_reporte": self.fecha_reporte.isoformat() if isinstance(self.fecha_reporte, datetime) else self.fecha_reporte,
         }
-        if self.id:
-            # Actualiza si ya existe
-            self.collection.update_one({"_id": self.id}, {"$set": corte_data})
-        else:
-            # Inserta si es nuevo
-            result = self.collection.insert_one(corte_data)
-            self.id = result.inserted_id
-        return self.id
 
-    def calcular_porcentaje_validacion(self):
-        total_usuarios = db["usuarios"].count_documents({"ubicacion": self.sector.id})
-        if total_usuarios == 0:
-            return 0
-        return (len(self.usuarios_validaciones) / total_usuarios) * 100
+    # Método para guardar el documento en MongoDB
+    def save(self):
+        # Preparar los datos para la inserción
+        corte_data = self.serialize
+        # Insertar el documento en la colección y obtener el _id generado
+        result = self.collection.insert_one(corte_data)
+        return str(result.inserted_id)  # Retornar el _id generado por MongoDB
 
-    def validarCorte(self, usuario):
-        if usuario not in self.usuarios_validaciones:
-            self.usuarios_validaciones.append(usuario)
-            self.save()
-
-        if self.calcular_porcentaje_validacion() >= 65:
-            self.estado = "validado"
-            self.save()
-            self.difundir_alerta()
-            return True
-        return False
-
-    def difundir_alerta(self):
-        notificacion = Notificacion(f"Alerta: Corte validado en sector {self.sector.nombre}", datetime.now(), "msj")
-        notificacion.enviar(self)
-
-    def supervisorCorte(self, usuario):
-        self.estado = "supervisado"
-        self.save()
-
-    def rechazarCorte(self, usuario):
-        self.estado = "rechazado"
-        self.save()
+    # Método estático para obtener un corte por external_id
+    @staticmethod
+    def get_by_external_id(external_id):
+        corte_data = db["cortes"].find_one({"external_id": external_id})
+        if corte_data:
+            return corte_data  # Devuelve los datos tal cual están en MongoDB
+        return None
