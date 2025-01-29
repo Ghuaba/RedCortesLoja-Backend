@@ -72,3 +72,37 @@ def respuesta_notificacion():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@notificacion_routes.route("/enviar", methods=["POST"])
+def enviar_notificacion():
+    """
+    Ruta para enviar una notificación a un usuario específico.
+
+    Recibe un JSON con los siguientes campos:
+    - mensaje (str): Mensaje de la notificación.
+    - tipo (str): Tipo de la notificación (OFICIAL, ALERTA, GENERAL).
+    - usuario_id (str): ID del usuario al que se le enviará la notificación.
+
+    Retorna:
+        - Código 201 si la notificación fue enviada con éxito.
+        - Código 400 si falta algún dato o hay un error.
+    """
+    try:
+        data = request.get_json()
+
+        if not data or "mensaje" not in data or "tipo" not in data or "usuario_id" not in data:
+            return jsonify({"error": "Faltan datos obligatorios (mensaje, tipo, usuario_id)"}), 400
+
+        mensaje = data["mensaje"]
+        tipo = data["tipo"]
+        usuario_id = data["usuario_id"]
+
+        resultado = NotificacionController.enviar_notificacion(mensaje, tipo, usuario_id)
+
+        if "error" in resultado:
+            return jsonify({"error": resultado["error"]}), 400
+
+        return jsonify(resultado), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
