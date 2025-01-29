@@ -38,5 +38,5 @@ class LoginControl:
             return jsonify({"code": 200, "datos": info, "msg": "SUCCESS"}), 200
         except Exception as e:
             logging.error(f"Error al iniciar sesión: {e}")
-            print(f"Error al iniciar sesión: {e}")  # Agrega este print para mostrar el error real
+            print(f"Error al iniciar sesión: {e}")
             return jsonify({"code": 500, "datos": {"error": "Error interno del servidor"}, "msg": "ERROR"}), 500

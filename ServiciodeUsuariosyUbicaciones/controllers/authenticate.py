@@ -1,7 +1,6 @@
 from flask import request, jsonify, make_response, current_app
 from pymongo import MongoClient
 import jwt
-from datetime import datetime, timedelta
 from functools import wraps
 from config import MONGODB_URI, MONGODB_DB
 
@@ -38,7 +37,7 @@ def token_required(f):
                 401
             )
         except jwt.InvalidTokenError as e:
-            print(f"Invalid token: {e}")  # Agrega este print para mostrar el error real
+            print(f"Invalid token: {e}")
             return make_response(
                 jsonify({"msg": f"Invalid token: {e}", "code": 401}),
                 401
