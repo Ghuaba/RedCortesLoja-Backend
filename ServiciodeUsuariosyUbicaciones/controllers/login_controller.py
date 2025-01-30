@@ -1,4 +1,4 @@
-from models.model_usuario import Usuario, usuarios_collection
+from models.model_usuario import usuarios_collection
 from flask import current_app, jsonify
 import jwt
 from datetime import datetime, timedelta, timezone
