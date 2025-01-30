@@ -15,7 +15,6 @@ jsonschema==4.23.0
 jsonschema-specifications==2024.10.1
 MarkupSafe==3.0.2
 pycparser==2.22
-PyJWT==2.10.1
 pymongo==4.11
 python-dotenv==1.0.1
 referencing==0.36.2
