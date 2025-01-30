@@ -1,27 +1,27 @@
+version: "3.8"
+
 services:
-  app:
+  flask_app:
     build: .
     container_name: flask_app
     ports:
       - "5000:5000"
+    depends_on:
+      - mongodb
     environment:
-      MONGO_URI: "mongodb+srv://pf_cloud:x4O20JELjV7WL7Ze@dbcloud.k63k2.mongodb.net/?retryWrites=true&w=majority"
+      - FLASK_ENV=development
+      - MONGO_URI=mongodb://mongodb:27017/ServicioSupervisorNotificaciones
     volumes:
       - .:/app
-    depends_on:
-      - mongo
     restart: always
 
-  mongo:
+  mongodb:
     image: mongo:6.0
     container_name: mongodb
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: pool
-      MONGO_INITDB_ROOT_PASSWORD: YCMcMjLBGoedfK9q
     restart: always
 
 volumes:
