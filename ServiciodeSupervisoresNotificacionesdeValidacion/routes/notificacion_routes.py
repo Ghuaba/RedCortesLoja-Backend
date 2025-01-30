@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify
 from config.db import db
 from models.notificacion import Notificacion
 from bson import ObjectId
+from models.push_token import PushToken
 
 
 from controllers.notificacion_controller import NotificacionController
@@ -129,5 +130,24 @@ def obtener_notificaciones_usuario(usuario_id):
 
         return jsonify({"notificaciones": notificaciones}), 200
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+
+@notificacion_routes.route("/registrar_push_token", methods=["POST"])
+def register_push_token():
+    try:
+        data = request.get_json()
+        token = data.get("token")
+        sector_id = data.get("sector_id")
+        usuario_id = data.get("usuario_id")
+
+        if not token or not sector_id:
+            return jsonify({"error": "Token y sector_id son requeridos"}), 400
+
+        push_token = PushToken(token, sector_id, usuario_id)
+        push_token.save()
+
+        return jsonify({"message": "Token registrado exitosamente"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

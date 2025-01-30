@@ -2,7 +2,7 @@ from models.corte import Corte
 from models.notificacion import Notificacion, TipoNotificacion
 from datetime import datetime
 from config.db import db
-
+from controllers.expo_service import ExpoService
 
 class CorteController:
     @staticmethod
@@ -113,7 +113,7 @@ class CorteController:
         Returns:
             dict: Mensaje indicando el estado de la operación.
         """
-        collection_respuestas = db["respuestas"]  # Colección para registrar las respuestas
+        collection_respuestas = db["respuestas"] 
 
         # Validar que el corte exista
         corte = Corte.get_by_external_id(corte_id)
@@ -153,6 +153,10 @@ class CorteController:
         collection_respuestas = db["respuestas"]
         collection_notificaciones = db["notificaciones"]
 
+        corte = Corte.get_by_external_id(corte_id)
+        if not corte:
+            raise ValueError("Corte no encontrado")
+
         # Obtener todas las respuestas del corte
         respuestas = list(collection_respuestas.find({"corte_id": corte_id}))
         if not respuestas:
@@ -179,6 +183,13 @@ class CorteController:
                 "fecha_creacion": datetime.utcnow(),
             }
             collection_notificaciones.insert_one(notificacion)
+
+            ExpoService.notify_sector(
+                sector_id=str(corte["sector"]),
+                title=f"Corte de {corte['tipoCorte']} Confirmado",
+                body=f"Se ha confirmado un corte de {corte['tipoCorte']} en su sector",
+                data={"corte_id": corte_id}
+            )
 
             return {
                 "message": "El corte ha sido confirmado",
