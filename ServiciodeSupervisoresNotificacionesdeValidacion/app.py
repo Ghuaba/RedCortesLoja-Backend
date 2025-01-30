@@ -27,4 +27,4 @@ app.register_blueprint(corte_routes, url_prefix='/cortes')
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True, allow_unsafe_werkzeug=True)
