@@ -34,6 +34,13 @@ steps:
     pip install -r requirements.txt
   displayName: 'Instalar dependencias'
 
+# Desinstalar y reinstalar PyJWT
+- script: |
+    cd ServiciodeUsuariosyUbicaciones
+    virtual\Scripts\activate
+    pip uninstall -y jwt PyJWT
+    pip install PyJWT
+  displayName: 'Reinstalar PyJWT'
 
 # Construir y subir la imagen Docker
 - task: Docker@2
