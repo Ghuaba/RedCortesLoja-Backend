@@ -2,6 +2,7 @@ from models.corte import Corte
 from models.notificacion import Notificacion, TipoNotificacion
 from datetime import datetime
 from config.db import db
+from controllers.expo_service import ExpoService
 
 class CorteController:
     @staticmethod
@@ -26,6 +27,7 @@ class CorteController:
         # Retornar el corte serializado con su nuevo ID
         return nuevo_corte.serialize
 
+
     @staticmethod
     def obtener_todos_los_cortes():
         """
@@ -38,16 +40,25 @@ class CorteController:
         lista_cortes = []
 
         for corte in cortes:
+            fecha_reporte = corte.get("fecha_reporte")
+            if isinstance(fecha_reporte, str):  
+                try:
+                    fecha_reporte = datetime.fromisoformat(fecha_reporte)  
+                except ValueError:
+                    fecha_reporte = None  # Si hay un error en el formato, asignar None
+            
             lista_cortes.append({
                 "id": str(corte["_id"]),
                 "tipo": corte.get("tipo"),
+                "tipoCorte": corte.get("tipoCorte"),                
                 "sector": corte.get("sector"),
                 "estado": corte.get("estado"),
-                "fechaReporte": corte.get("fechaReporte").isoformat() if "fechaReporte" in corte else None,
+                "fechaReporte": fecha_reporte.isoformat() if fecha_reporte else None,
                 "usuario_id": str(corte["usuario_id"]) if corte.get("usuario_id") else None
             })
 
         return lista_cortes
+
 
     @staticmethod
     def registrar_respuesta(corte_id, usuario_id, respuesta):
@@ -102,7 +113,7 @@ class CorteController:
         Returns:
             dict: Mensaje indicando el estado de la operación.
         """
-        collection_respuestas = db["respuestas"]  # Colección para registrar las respuestas
+        collection_respuestas = db["respuestas"] 
 
         # Validar que el corte exista
         corte = Corte.get_by_external_id(corte_id)
@@ -142,6 +153,10 @@ class CorteController:
         collection_respuestas = db["respuestas"]
         collection_notificaciones = db["notificaciones"]
 
+        corte = Corte.get_by_external_id(corte_id)
+        if not corte:
+            raise ValueError("Corte no encontrado")
+
         # Obtener todas las respuestas del corte
         respuestas = list(collection_respuestas.find({"corte_id": corte_id}))
         if not respuestas:
@@ -168,6 +183,13 @@ class CorteController:
                 "fecha_creacion": datetime.utcnow(),
             }
             collection_notificaciones.insert_one(notificacion)
+
+            ExpoService.notify_sector(
+                sector_id=str(corte["sector"]),
+                title=f"Corte de {corte['tipoCorte']} Confirmado",
+                body=f"Se ha confirmado un corte de {corte['tipoCorte']} en su sector",
+                data={"corte_id": corte_id}
+            )
 
             return {
                 "message": "El corte ha sido confirmado",
