@@ -34,6 +34,13 @@ steps:
     pip install -r requirements.txt
   displayName: 'Instalar dependencias'
 
+# Reinstalar PyJWT
+- script: |
+    cd ServiciodeUsuariosyUbicaciones
+    virtual\Scripts\activate
+    pip install --upgrade --force-reinstall PyJWT==2.10.1
+  displayName: 'Reinstalar PyJWT'
+
 # Construir y subir la imagen Docker
 - task: Docker@2
   inputs:
