@@ -18,7 +18,7 @@ def create_app():
     try:
         client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000, tls=True)
         client.admin.command('ping')
-        connection_status = {"message": "MongoDB conectado correctamente", "status": "success"}
+        connection_status = {"message": "Probar pipeline (Para reflejo de cambios)", "status": "success"}
     except errors.ServerSelectionTimeoutError as e:
         connection_status = {"message": f"Error al conectar con MongoDB: {e}", "status": "failure"}
 
