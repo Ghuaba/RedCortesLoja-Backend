@@ -1,22 +1,16 @@
+version: '3.8'
+
 services:
   app:
     build: .
     ports:
       - "5000:5000"
     environment:
-      - MONGODB_URI=${MONGODB_URI}
-      - MONGODB_DB=${MONGODB_DB}
-      - SECRET_KEY=${SECRET_KEY}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - MONGODB_URI=${MONGODB_URI}  # La cadena de conexión a MongoDB Atlas
+      - MONGODB_DB=${MONGODB_DB}    # Nombre de la base de datos
+      - SECRET_KEY=${SECRET_KEY}    # Clave secreta para la app
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}  # Clave secreta para JWT
     volumes:
       - .:/app
-    depends_on:
-      - mongo
-
-  mongo:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: adminjaime
-      MONGO_INITDB_ROOT_PASSWORD: admin15
+    env_file:
+      - .env

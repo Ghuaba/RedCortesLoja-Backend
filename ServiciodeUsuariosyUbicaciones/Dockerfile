@@ -10,7 +10,7 @@ COPY . .
 
 # Instala las dependencias
 RUN pip install --no-cache-dir -r requirements.txt
-
+RUN pip install pyjwt
 # Expone el puerto en el que la aplicación correrá
 EXPOSE 5000
 
