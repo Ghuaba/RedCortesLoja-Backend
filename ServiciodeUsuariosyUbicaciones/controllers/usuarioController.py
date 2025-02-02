@@ -5,46 +5,51 @@ from pymongo import MongoClient
 from config import MONGODB_URI, MONGODB_DB
 import logging
 from bcrypt import hashpw, gensalt
+from models.rol import listar_roles as listar_roles_model  
 
 client = MongoClient(MONGODB_URI)
 db = client[str(MONGODB_DB)]
 usuarios_collection = db['usuarios']
+rol_collection = db['rol']
 
 logging.basicConfig(level=logging.ERROR)  # Set logging level to ERROR
 
-def validar_datos_usuario(nombre, apellido, correo, contraseña):
+def validar_datos_usuario(nombre, apellido, correo, contraseña,ubicacion):
     if not re.match(r'^[a-zA-Z]{2,}$', nombre):
        return False, "Nombre inválido"
     if not re.match(r'^[a-zA-Z]{2,}$', apellido):
         return False, "Apellido inválido"
     if not re.match(r'^[\w\.-]+@[\w\.-]+\.\w+$', correo):
         return False, "Correo inválido"
-    # if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$', contraseña):
-    #     return False, "Contraseña inválida"
-    #if not re.match(r'^[a-zA-Z\s]{2,}$', ubicacion):
-    #    return False, "Ubicación inválida"
+    if not re.match(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$', contraseña):
+         return False, "Contraseña inválida"
+    if not re.match(r'^[a-zA-Z\s]{2,}$', ubicacion):
+        return False, "Ubicación inválida"
+    return True, ""
+def validar_datos_supervisor(nombre, apellido, correo, contraseña, ubicacion=None):
+    # Implementa la validación de los datos del usuario aquí
+    # Si ubicacion no es necesario, puedes ignorarlo o establecer un valor predeterminado
+    if not nombre or not apellido or not correo or not contraseña:
+        return False, "Todos los campos son obligatorios"
+    # Agrega más validaciones según sea necesario
     return True, ""
 
-def crear_usuario(nombre, apellido, correo, contraseña):
+def crear_usuario(nombre, apellido, correo, contraseña,ubicacion):
     try:
-        valido, mensaje = validar_datos_usuario(nombre, apellido, correo, contraseña)
+        valido, mensaje = validar_datos_usuario(nombre, apellido, correo, contraseña,ubicacion)
         if not valido:
             return {"message": mensaje}, 400  # Devuelve un código 400 para error de validación
-        
         if usuarios_collection.find_one({"correo": correo}):
             return {"message": "Correo ya registrado"}, 400
-        
         hashed_password = hashpw(contraseña.encode('utf-8'), gensalt())
-        
         external_id = str(uuid.uuid4())
         estado = "activo"
-        
         nuevo_usuario = {
             "nombre": nombre,
             "apellido": apellido,
             "correo": correo,
             "contraseña": hashed_password.decode('utf-8'),
-            #"ubicacion": ubicacion,
+            "ubicacion": ubicacion,
             "external_id": external_id,
             "estado": estado
         }
@@ -55,6 +60,40 @@ def crear_usuario(nombre, apellido, correo, contraseña):
     except Exception as e:
         logging.error(f"Error al crear usuario: {e}")
         return {"message": "Error interno del servidor"},500
+    
+
+def crearSupervisor(nombre, apellido, correo, contraseña):
+    try:
+        valido, mensaje = validar_datos_supervisor(nombre, apellido, correo, contraseña)
+        if not valido:
+            return {"message": mensaje}, 400  # Devuelve un código 400 para error de validación
+        
+        if usuarios_collection.find_one({"correo": correo}):
+            return {"message": "Correo de supervisor ya registrado"}, 400
+        
+        hashed_password = hashpw(contraseña.encode('utf-8'), gensalt())
+        
+        external_id = str(uuid.uuid4())
+        estado = "activo"
+        
+        rol_supervisor = rol_collection.find_one({"nombre": "Supervisor"})
+        if not rol_supervisor:
+            return {"message": "Rol Supervisor no encontrado"}, 400
+        
+        nuevo_usuario = {
+            "nombre": nombre,
+            "apellido": apellido,
+            "correo": correo,
+            "contraseña": hashed_password.decode('utf-8'),
+            "external_id": external_id,
+            "estado": estado,
+            "rol_id": rol_supervisor["_id"]
+        }
+        
+        usuarios_collection.insert_one(nuevo_usuario)
+        return {"message": "Usuario creado exitosamente"}, 201
+    except Exception as e:
+        return {"message": str(e)}, 500
     
 
 def obtener_usuarios():
@@ -126,3 +165,10 @@ def actualizarEstado(external_id):
     except Exception as e:
         logging.error(f"Error al actualizar estado del usuario: {e}")
         return {"message": "Error interno del servidor"}, 500
+    
+def listar_roles():
+    try:
+        roles = listar_roles_model()
+        return { "datos": roles}, 200
+    except Exception as e:
+        return {"message":str(e)}, 500

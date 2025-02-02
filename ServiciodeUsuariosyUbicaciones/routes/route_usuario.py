@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from controllers.usuarioController import crear_usuario , obtener_usuarios, obtener_usuario_por_external_id
-from controllers.usuarioController import actualizar_usuario,eliminar_usuario,actualizarEstado
+from controllers.usuarioController import actualizar_usuario,eliminar_usuario,actualizarEstado,listar_roles,crearSupervisor
 
 usuario_bp = Blueprint('usuario', __name__)
 
@@ -11,9 +11,9 @@ def add_user():
     apellido = data.get('apellido')
     correo = data.get('correo')
     contraseña = data.get('contraseña')
-    #ubicacion = data.get('ubicacion')
+    ubicacion = data.get('ubicacion')
 
-    response = crear_usuario(nombre, apellido, correo, contraseña)
+    response = crear_usuario(nombre, apellido, correo, contraseña,ubicacion)
     return jsonify(response)
 
 @usuario_bp.route('/obtener', methods=['GET'])
@@ -43,7 +43,23 @@ def eliminar(external_id):
     response = eliminar_usuario(external_id)
     return jsonify(response)
 
-@usuario_bp.route('/actualizar_estado/<external_id>', methods=['POST'])
+@usuario_bp.route('/actualizar_estado/<external_id>', methods=['GET'])
 def actualizar_estado(external_id):
     response = actualizarEstado(external_id)
+    return jsonify(response)
+
+@usuario_bp.route('/listar', methods=['GET'])
+def listar():
+    roles = listar_roles()
+    return jsonify(roles)
+
+@usuario_bp.route('/crearSupervisor', methods=['POST'])
+def add_supervisor():
+    data = request.get_json()
+    nombre = data.get('nombre')
+    apellido = data.get('apellido')
+    correo = data.get('correo')
+    contraseña = data.get('contraseña')
+
+    response = crearSupervisor(nombre, apellido, correo, contraseña)
     return jsonify(response)
