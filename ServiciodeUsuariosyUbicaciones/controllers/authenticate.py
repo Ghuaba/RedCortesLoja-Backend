@@ -8,6 +8,7 @@ client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=5000, tls=True)
 db = client[str(MONGODB_DB)]
 usuarios_collection = db['usuarios']
 
+
 def token_required(f):
     @wraps(f)
     # Es un componente para validar el token

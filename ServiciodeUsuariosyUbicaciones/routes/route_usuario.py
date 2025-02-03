@@ -19,6 +19,7 @@ def add_user():
 @usuario_bp.route('/obtener', methods=['GET'])
 def listar_usuarios():
     usuarios = obtener_usuarios()
+    print(usuarios)
     return jsonify(usuarios)
 
 @usuario_bp.route('/obtener/<external_id>', methods=['GET'])
@@ -43,7 +44,7 @@ def eliminar(external_id):
     response = eliminar_usuario(external_id)
     return jsonify(response)
 
-@usuario_bp.route('/actualizar_estado/<external_id>', methods=['GET'])
+@usuario_bp.route('/actualizar_estado/<external_id>', methods=['POST'])
 def actualizar_estado(external_id):
     response = actualizarEstado(external_id)
     return jsonify(response)

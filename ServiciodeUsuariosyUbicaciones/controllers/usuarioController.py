@@ -99,6 +99,7 @@ def crearSupervisor(nombre, apellido, correo, contraseña):
 def obtener_usuarios():
     try:
         usuarios = list(usuarios_collection.find({}, {"_id": 0, "nombre": 1, "apellido": 1, "correo": 1, "estado": 1, "external_id": 1}))
+        print(f"Usuarios encontrados: {len(usuarios)}")
         return {"code": 200, "datos": usuarios}
     except Exception as e:
         logging.error(f"Error al obtener usuarios: {e}")
