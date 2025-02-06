@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=${MONGODB_URI}  # La cadena de conexión a MongoDB Atlas
+      - MONGODB_DB=${MONGODB_DB}    # Nombre de la base de datos
+      - SECRET_KEY=${SECRET_KEY}    # Clave secreta para la app
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}  # Clave secreta para JWT
+    volumes:
+      - .:/app
+    env_file:
+      - .env

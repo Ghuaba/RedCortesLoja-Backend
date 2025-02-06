@@ -1,0 +1,61 @@
+trigger:
+  - main
+
+pool:
+  name: 'Default'
+  demands:
+    - agent.name -equals AgenteCloud
+
+variables:
+  azureServiceConnection: 'ServiciodeUsuariosyUbicaciones'
+  azureWebAppName: 'ServiciodeUsuariosyUbicaciones'
+  dockerRegistryServiceConnection: 'Contenedor_ServiciodeUsuariosyUbicaciones'
+  imageRepository: 'serviciodeusuariosyubicaciones-app'
+  containerRegistry: 'serviciodeusuariosyubicaciones.azurecr.io'
+  tag: '$(Build.BuildId)'
+
+steps:
+
+# Verificar versión de Python
+- script: python --version
+  displayName: 'Verificar versión de Python'
+
+# Descargar archivo .env
+- task: DownloadSecureFile@1
+  inputs:
+    secureFile: '.env'
+
+# Instalar dependencias en entorno virtual
+- script: |
+    cd ServiciodeUsuariosyUbicaciones
+    python -m venv virtual
+    virtual\Scripts\activate
+    pip install --upgrade pip
+    pip install -r requirements.txt
+  displayName: 'Instalar dependencias'
+
+# Instalar PyJWT
+- script: |
+    cd ServiciodeUsuariosyUbicaciones
+    virtual\Scripts\activate
+    pip install PyJWT
+  displayName: 'Instalar PyJWT'
+
+# Construir y subir la imagen Docker
+- task: Docker@2
+  inputs:
+    containerRegistry: '$(dockerRegistryServiceConnection)'
+    repository: '$(imageRepository)'
+    command: 'buildAndPush'
+    Dockerfile: '$(Build.SourcesDirectory)\ServiciodeUsuariosyUbicaciones\Dockerfile'
+    buildContext: '$(Build.SourcesDirectory)\ServiciodeUsuariosyUbicaciones'
+    tags: |
+      $(tag)
+
+# Desplegar la imagen a Azure Web App
+- task: AzureWebAppContainer@1
+  inputs:
+    azureSubscription: '$(azureServiceConnection)'
+    appName: '$(azureWebAppName)'
+    containers: |
+      $(containerRegistry)/$(imageRepository):$(tag)
