@@ -21,3 +21,10 @@ def login():
     data = request.get_json()
     response, status_code = login_control.inicio_sesion(data)
     return response, status_code
+
+@login_bp.route('/loginSuper', methods=['POST'])
+@expects_json(schema_sesion)
+def loginSuper():
+    data = request.get_json()
+    response, status_code = login_control.inicio_sesionSupervisor(data)
+    return response, status_code
